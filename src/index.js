@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
+import { hints } from './hints';
 
 function WordCell(props) {
   let classnames = 'word-cell'
@@ -9,8 +10,12 @@ function WordCell(props) {
     let validate = ' gray';
     if (props.word[props.index] == props.value) {
       validate = 'red';
+      hints.included.add(props.value)
     } else if (props.word.includes(props.value)) {
       validate = 'blue'
+      hints.included.add(props.value)
+    } else {
+      hints.excluded.add(props.value)
     }
     classnames += ' ' + validate
   }
@@ -49,7 +54,7 @@ class Grid extends React.Component {
 function Keyboard(props) {
   const letters = Array.from({ length: 26 }, (_, i) => String.fromCharCode('A'.charCodeAt(0) + i));
   const keys = letters.map((val, key) => {
-    return (<button onClick={() => props.onClick(val)}><td key={key}>{val}</td></button>)
+    return (<td key={key} onClick={() => props.onClick(val)}>{val}</td>)
   });
   return (
     <table className="keyboard">
@@ -63,13 +68,23 @@ function Keyboard(props) {
 class Game extends React.Component {
   constructor(props) {
     super(props);
+    this.loadWord();
     this.state = {
       clickedLetters: [],
       currentIndex: 0,
       needsCheck: false,
-      rowsChecked: -1,
-      word: 'IRATE'
+      currentRow: 0,
+      word: null,
+      showHints: false,
+      hints: []
     }
+  }
+
+  loadWord() {
+    fetch('http://localhost:8080/word')
+      .then(response => response.text())
+      .then(result => this.setState({word: result.toUpperCase()}))
+      .catch(error => console.error(error));
   }
 
   handleClick(letter) {
@@ -77,34 +92,73 @@ class Game extends React.Component {
       return;
     }
     this.state.clickedLetters.push(letter);
-    const updatedIndex = this.state.currentIndex + 1
     this.setState({
-      currentIndex: updatedIndex,
-      needsCheck: updatedIndex % 5 == 0
+      needsCheck: this.state.clickedLetters.length % 5 == 0
     })
   }
 
   check() {
+    if (this.state.clickedLetters.length % 5 != 0) {
+      return;
+    }
+    const currentTry = this.state.clickedLetters.slice(this.state.currentRow*5,(this.state.currentRow*5)+5).join("")
+    fetch('http://localhost:8080/word/'+currentTry.toLowerCase()+'/validate')
+      .then(response => response.text())
+      .then(result => { 
+        if (result === 'true') {
+          this.setState({
+            currentRow: this.state.currentRow + 1,
+            needsCheck: false
+          });
+        this.getHints()
+        } else {
+          window.alert("invalid word");
+        }
+      }).catch(error => console.log(error));
+  }
+
+  backspace() {
+    if (this.state.clickedLetters.length - this.state.currentRow * 5 <= 0) {
+      return
+    }
     this.setState({
-      rowsChecked: this.state.rowsChecked + 1,
-      needsCheck: false
+      clickedLetters: this.state.clickedLetters.slice(0,-1),
+      needsCheck: this.state.clickedLetters.length % 5 == 0
     })
   }
 
-  render() {
+  async getHints() {
+    const included = 'included='+[...hints.included].join("").toLowerCase()
+    const excluded = '&excluded='+[...hints.excluded].join("").toLowerCase()
+    fetch('http://localhost:8080/filter?'+included+excluded)
+      .then(response => response.json())
+      .then(result => {this.setState({hints: result}) })
+      .catch(error => console.log(error));
+  }
 
+  render() {
     let gridProps = {
       clickedLetters: this.state.clickedLetters,
       word: this.state.word,
-      checkRows: this.state.rowsChecked
+      checkRows: this.state.currentRow - 1
     }
-
     return (
       <div>
         <Grid {...gridProps} />
         <Keyboard onClick={(i) => this.handleClick(i)}/>
         <div className="check">
-          <button onClick={() => this.check()}>Check</button>
+          <button className='check' onClick={() => this.check()}>Check</button>
+          <button className='undo' onClick={() => this.backspace()}>
+            <img width="15px" src="https://www.pngall.com/wp-content/uploads/4/Undo-PNG-Free-Download.png"/>
+          </button>
+          <div>
+            <button className="hints-button" onClick={() => this.setState({showHints: !this.state.showHints})}>
+              Hints
+            </button>
+          </div>
+          <div hidden={this.state.showHints}>
+            <div className="hints">{this.state.hints.join(" ")}</div>
+          </div>
         </div>
       </div>
     )

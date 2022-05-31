@@ -19,20 +19,17 @@ code {
   margin: auto;
   table-layout: fixed;
   border-spacing: 5px;
+  width: 50%;
 }
 
 .keyboard td {
   border: 1px solid black;
   border-radius: 5px;
-  width: 40px;
+  width: 20px;
   height: 30px;
   text-align: center;
   margin-right: 100px;
-  vertical-align: middle
-}
-
-.keyboard button {
-  all: unset;
+  vertical-align: middle;
   cursor: pointer;
 }
 
@@ -60,4 +57,8 @@ code {
 
 .blue {
   background-color: lightblue;
+}
+
+.hints-button {
+  float: left;
 }
