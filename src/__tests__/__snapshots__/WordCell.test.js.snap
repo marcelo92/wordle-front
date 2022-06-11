@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Return <td> with blue classname for letter in wrong index 1`] = `
+<td
+  className="word-cell blue"
+>
+  e
+</td>
+`;
+
+exports[`Return <td> with gray classname for no match 1`] = `
+<td
+  className="word-cell  gray"
+>
+  f
+</td>
+`;
+
+exports[`Return <td> with no validation class 1`] = `
+<td
+  className="word-cell"
+/>
+`;
+
+exports[`Return <td> with red classname for letter in wrong index 1`] = `
+<td
+  className="word-cell red"
+>
+  i
+</td>
+`;
