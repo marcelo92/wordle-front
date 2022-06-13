@@ -22,7 +22,7 @@ export default class Game extends React.Component {
     }
   
     loadWord() {
-      fetch('http://localhost:8080/words/new')
+      fetch('/words/new')
         .then(response => response.text())
         .then(result => this.setState({ word: result.toUpperCase() }))
         .catch(error => console.error(error));
@@ -34,7 +34,7 @@ export default class Game extends React.Component {
       }
       this.state.clickedLetters[this.state.currentRow].push(letter);
       this.setState({
-        canCheck: this.state.clickedLetters[this.state.currentRow].length % 5 == 0
+        canCheck: this.state.clickedLetters[this.state.currentRow].length % 5 === 0
       })
     }
   
@@ -44,7 +44,8 @@ export default class Game extends React.Component {
       }
       this.state.clickedLetters[this.state.currentRow] = this.state.clickedLetters[this.state.currentRow].slice(0, -1)
       this.setState({
-        canCheck: false
+        canCheck: false,
+        
       })
     }
   
@@ -54,12 +55,12 @@ export default class Game extends React.Component {
       }
       const currentRow = this.state.clickedLetters[this.state.currentRow];
       const currentWord = currentRow.join("");
-      if (currentWord == this.state.word) {
+      if (currentWord === this.state.word) {
         window.alert("Victory!");
       }
       currentRow.filter(letter => this.state.word.split("").includes(letter)).forEach(l => this.state.checkedLetters.included.add(l));
       currentRow.filter(letter => !this.state.word.split("").includes(letter)).forEach(l => this.state.checkedLetters.excluded.add(l));
-      fetch('http://localhost:8080/words/' + currentWord.toLowerCase() + '/validate')
+      fetch('/words/' + currentWord.toLowerCase() + '/validate')
         .then(response => response.text())
         .then(result => {
           if (result === 'true') {
@@ -78,7 +79,7 @@ export default class Game extends React.Component {
     async getHints() {
       const included = 'included=' + [...this.state.checkedLetters.included].join("").toLowerCase()
       const excluded = '&excluded=' + [...this.state.checkedLetters.excluded].join("").toLowerCase()
-      fetch('http://localhost:8080/words/filter?' + included + excluded)
+      fetch('/words/filter?' + included + excluded)
         .then(response => response.json())
         .then(result => { this.setState({ hints: result }) })
         .catch(error => console.log(error));
@@ -98,7 +99,7 @@ export default class Game extends React.Component {
           <div className="check">
             <button className='check' onClick={() => this.check()}>Check</button>
             <button className='undo' onClick={() => this.backspace()}>
-              <img width="15px" src="https://www.pngall.com/wp-content/uploads/4/Undo-PNG-Free-Download.png" />
+              <img width="15px" alt="undo" src="https://www.pngall.com/wp-content/uploads/4/Undo-PNG-Free-Download.png" />
             </button>
             <div>
               <button className="hints-button" onClick={() => this.setState({ showHints: !this.state.showHints })}>
